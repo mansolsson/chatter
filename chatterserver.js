@@ -5,12 +5,14 @@ var WebSocketServer = require('websocket').server;
 var http = require('http');
 var fs = require('fs');
 
-// TODO: Remove client when connection is terminated...
-var clients = [];
-// TODO: Put port in a config file...
+function User(name, connection) {
+    this.name = name;
+    this.connection = connection;
+}
+
+var activeUsers = [];
 var port = 8080;
 
-// TODO: read files from a configurable folder instead...
 var server = http.createServer(function(request, response) {
     console.log((new Date()) + ' Got request for ' + request.url);
     if(request.url === '/' || request.url === '/index.html') {
@@ -36,26 +38,39 @@ var wsServer = new WebSocketServer({
     autoAcceptConnections: false
 });
  
-function originIsAllowed(origin) {
-  return true;
+function addUser(name, connection) {
+    activeUsers.push(new User(name, connection));
+    console.log('New user added, ' + activeUsers.length + ' total');
 }
- 
-wsServer.on('request', function(request) {
-    if (!originIsAllowed(request.origin)) {
-      request.reject();
-      console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
-      return;
-    }
 
+function removeUser(connection) {
+    for(var i = 0; i < activeUsers.length; i++) {
+        if(activeUsers[i].connection === connection) {
+            activeUsers.splice(i, 1);
+            break;
+        }
+    }
+    console.log('Removed user, ' + activeUsers.length + ' total');
+}
+
+function sendMessageToUsers(message) {
+    for(var i = 0; i < activeUsers.length; i++) {
+        activeUsers[i].connection.sendUTF(message);
+    }
+}
+
+wsServer.on('request', function(request) {
     var connection = request.accept('chatter-protocol', request.origin);
-    clients.push(connection);
+    addUser('Unknown', connection);
+
     console.log((new Date()) + ' Connection accepted.');
     connection.on('message', function(message) {
         if (message.type === 'utf8') {
             console.log('Received Message: ' + message.utf8Data);
-            for(var i = 0, length = clients.length; i < length; i++) {
-                clients[i].sendUTF(message.utf8Data);
-            }
+            sendMessageToUsers(message.utf8Data);
         }
+    });
+    connection.on('close', function(reasonCode, description) {
+        removeUser(connection);
     });
 });
