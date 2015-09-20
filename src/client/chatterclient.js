@@ -1,30 +1,47 @@
 'use strict';
 
 window.onload = function() {
-    var ws = new WebSocket('ws://localhost:8080', 'chatter-protocol');
+    var name = prompt('Enter name');
+
+    var ws = new WebSocket('ws://' + location.host, 'chatter-protocol');
     ws.onmessage = function(event) {
+        var message = JSON.parse(event.data);
+
         var messageMetaDiv = document.createElement('div');
         messageMetaDiv.className = 'message-meta';
-        messageMetaDiv.appendChild(document.createTextNode('Test Testsson'));
+        messageMetaDiv.appendChild(document.createTextNode(message.sender));
         messageMetaDiv.appendChild(document.createElement('br'));
-        messageMetaDiv.appendChild(document.createTextNode('2014-01-01 11:12'));
+        messageMetaDiv.appendChild(document.createTextNode(message.timestamp));
 
         var messageDiv = document.createElement('div');
         messageDiv.className = 'message';
-        messageDiv.appendChild(document.createTextNode(event.data));
+        messageDiv.appendChild(document.createTextNode(message.data));
         messageDiv.appendChild(document.createElement('br'));
         messageDiv.appendChild(messageMetaDiv);
 
         document.getElementById('message-box').appendChild(messageDiv);
     };
     ws.onopen = function() {
+        ws.send(JSON.stringify({
+            type: 'updatename',
+            name: name
+        }));
+
         document.getElementById('ib').onclick = function(event) {
-            ws.send(document.getElementById('im').value);
+            var message = {
+                type: 'text',
+                text: document.getElementById('im').value
+            };
+            ws.send(JSON.stringify(message));
             document.getElementById('im').value = '';
         };
         document.getElementById('im').onkeypress = function(event) {
             if(event.keyCode === 13) {
-                ws.send(document.getElementById('im').value);
+                var message = {
+                    type: 'text',
+                    text: document.getElementById('im').value
+                };
+                ws.send(JSON.stringify(message));
                 document.getElementById('im').value = '';
             }
         };
