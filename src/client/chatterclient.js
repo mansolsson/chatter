@@ -4,11 +4,11 @@ var messageInputId = 'message-input';
 var sendButtonId = 'send-button';
 
 window.onload = function() {
-    initWebSocket(name);
+    initWebSocket();
     document.getElementById('message-input').focus();
 };
 
-function initWebSocket(name) {
+function initWebSocket() {
     var name = prompt('Enter name:');
     var ws = new WebSocket('ws://' + location.host, 'chatter-protocol');
     ws.onopen = function() {
@@ -56,4 +56,3 @@ function addMessage(event) {
 
     document.getElementById('message-box').appendChild(messageDiv);
 }
-
