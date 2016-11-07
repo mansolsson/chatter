@@ -1,4 +1,4 @@
-# chatter
+# Chatter
 
 A simple chat program created to test websockets.
 
