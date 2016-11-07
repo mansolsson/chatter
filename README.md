@@ -1,2 +1,11 @@
 # chatter
-A simple chat program
+
+A simple chat program created to test websockets.
+
+### Build
+
+> npm install
+
+### Run
+
+> node chatterserver.js
